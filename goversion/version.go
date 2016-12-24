@@ -36,10 +36,16 @@ func GetVersion() (string, error) {
 func main() {
 
 	v, _ := GetVersion()
-	vs := fmt.Sprintf(`-X github.com/wx13/version.Version=%s `, v)
-	ldflags := vs
-	args := []string{"build", "-ldflags", ldflags}
-	args = append(args, os.Args[1:]...)
+	ldflags := fmt.Sprintf(`-X github.com/wx13/version.Version=%s `, v)
+
+	args := []string{}
+	if len(os.Args) > 1 {
+		args = append(args, os.Args[1])
+	}
+	args = append(args, "-ldflags")
+	args = append(args, ldflags)
+	args = append(args, os.Args[2:]...)
+
 	cmd := exec.Command("go", args...)
 	out, _ := cmd.CombinedOutput()
 	fmt.Println(string(out))
