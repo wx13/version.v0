@@ -1,6 +1,7 @@
 package version
 
 import (
+	"fmt"
 	"os"
 )
 
@@ -11,7 +12,9 @@ var (
 )
 
 func PrintVersion() {
-	println(Version)
+	fmt.Printf("Version:    %s\n", Version)
+	fmt.Printf("Build Date: %s\n", Date)
+	fmt.Printf("Commit:     %s\n", Commit)
 }
 
 func Run() {

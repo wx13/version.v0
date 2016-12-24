@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 func GetVersion() (string, error) {
@@ -33,10 +34,20 @@ func GetVersion() (string, error) {
 
 }
 
+func GetCommit() (string, error) {
+	return "", nil
+}
+
+func GetTime() (string, error) {
+	return time.Now().Format(time.RFC3339), nil
+}
+
 func main() {
 
 	v, _ := GetVersion()
-	ldflags := fmt.Sprintf(`-X github.com/wx13/version.Version=%s `, v)
+	ldflags := fmt.Sprintf(`-X github.com/wx13/version.Version=%s`, v)
+	t, _ := GetTime()
+	ldflags += fmt.Sprintf(` -X github.com/wx13/version.Date=%s`, t)
 
 	args := []string{}
 	if len(os.Args) > 1 {
