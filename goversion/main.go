@@ -44,7 +44,14 @@ func GetVersion() (string, error) {
 func GetCommit() (string, error) {
 	cmd := exec.Command("git", "rev-parse", "HEAD")
 	out, _ := cmd.Output()
-	return string(out), nil
+	commit := strings.Split(string(out), "\n")[0]
+	cmd = exec.Command("git", "status", "-s", "-uno")
+	out, _ = cmd.Output()
+	lines := strings.Split(string(out), "\n")
+	if len(lines[0]) > 0 {
+		commit += "*"
+	}
+	return commit, nil
 }
 
 // GetTIme returns a string representation of the current time.
