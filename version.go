@@ -11,6 +11,7 @@ var (
 	Commit  string
 )
 
+// PrintVersion prints version info to stdout.
 func PrintVersion() {
 	fmt.Printf("Version:    %s\n", Version)
 	fmt.Printf("Build Date: %s\n", Date)
