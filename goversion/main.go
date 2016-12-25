@@ -24,11 +24,13 @@ func GetVersion() (string, error) {
 
 	// Start with the current dir, and step up through the parents.
 	for {
-		data, err := ioutil.ReadFile(path.Join(dir, ".version"))
-		if err == nil {
-			text := string(data)
-			v := strings.Split(text, "\n")[0]
-			return v, nil
+		for _, name := range []string{".version", "VERSION"} {
+			data, err := ioutil.ReadFile(path.Join(dir, name))
+			if err == nil {
+				text := string(data)
+				v := strings.Split(text, "\n")[0]
+				return v, nil
+			}
 		}
 		if dir == "/" {
 			return "", fmt.Errorf("cannot find .version file")
