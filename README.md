@@ -12,7 +12,7 @@ First get the package:
 
     $ go get github.com/wx13/version
 
-Then add the line
+Then import and add the line
 
     version.Run()
 
@@ -29,7 +29,8 @@ can do:
     Commit:     c4e91ed7dc70ec09f097b3847a88090e21dbe936
 
 The version number is obtained from a file called `.version` in the current
-directory or a parent directory.
+directory or a parent directory.  The file can also be called "VERSION".
+
 
 Example
 -------
@@ -45,5 +46,5 @@ program looks like:
 
     func main() {
         version.Run()
-        prntln("Do something...")
+        println("Do something...")
     }
