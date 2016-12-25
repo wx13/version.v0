@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/wx13/version"
 )
 
 // GetVersion searches for a file named ".version" in
@@ -62,6 +64,8 @@ func GetTime() (string, error) {
 }
 
 func main() {
+
+	version.Run()
 
 	// Construct the ldflags string.
 	v, _ := GetVersion()
