@@ -1,3 +1,4 @@
+// Package version provides a simple way to version an executable.
 package version
 
 import (

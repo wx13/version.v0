@@ -13,10 +13,10 @@ import (
 	"github.com/wx13/version"
 )
 
-// GetVersion searches for a file named ".version" in
-// the current directory or any parent directory.  If found,
-// it returns the first line of this file.  If not, it
-// returns an empty string.
+// GetVersion searches for a file named ".version" or "VERSION" in
+// the current directory or any parent directory.  If found, it
+// returns the first line of this file.  If not, it returns an
+// empty string.
 func GetVersion() (string, error) {
 
 	dir, err := os.Getwd()
@@ -46,16 +46,22 @@ func GetVersion() (string, error) {
 
 // GetCommit returns git commit and status info.
 func GetCommit() (string, error) {
+
+	// Get the current commit hash.
 	cmd := exec.Command("git", "rev-parse", "HEAD")
 	out, _ := cmd.Output()
 	commit := strings.Split(string(out), "\n")[0]
+
+	// Get the git status.
 	cmd = exec.Command("git", "status", "-s", "-uno")
 	out, _ = cmd.Output()
 	lines := strings.Split(string(out), "\n")
 	if len(lines[0]) > 0 {
 		commit += "*"
 	}
+
 	return commit, nil
+
 }
 
 // GetTIme returns a string representation of the current time.
@@ -84,7 +90,7 @@ func main() {
 	args = append(args, ldflags)
 	args = append(args, os.Args[2:]...)
 
-	// Run the build command.
+	// Run the command.
 	cmd := exec.Command("go", args...)
 	out, _ := cmd.CombinedOutput()
 	fmt.Println(string(out))
