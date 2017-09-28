@@ -2,30 +2,66 @@
 package version
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"text/template"
 )
 
+// Use package variables because they can be set linker flags.
 var (
 	Version string
 	Date    string
 	Commit  string
 )
 
-// PrintVersion prints version info to stdout.
-func PrintVersion() {
-	fmt.Printf("Version:    %s\n", Version)
-	fmt.Printf("Build Date: %s\n", Date)
-	fmt.Printf("Commit:     %s\n", Commit)
+// Printer allows the user to set a custom print template.
+type Printer struct {
+	Template string
 }
 
-func Run() {
+// NewPrinter sets the default print template.
+func NewPrinter() *Printer {
+	p := Printer{}
+	p.Template = ""
+	p.Template += "Version:    {{.Version}}\n"
+	p.Template += "Build Date: {{.Date}}\n"
+	p.Template += "Commit:     {{.Commit}}\n"
+	return &p
+}
+
+// Print prints version info, conditioned on the user input.
+func (p *Printer) Print() error {
+	// Don't do anything if no arguments are passed.
 	if len(os.Args) < 2 {
-		return
+		return nil
 	}
+	// Check if user is asking for version information.
 	switch os.Args[1] {
 	case "version", "-version", "--version":
-		PrintVersion()
+
+		// Compile the print template.
+		t := template.Must(template.New("VersionPrinter").Parse(p.Template))
+		var b bytes.Buffer
+
+		// Execute the template and output the result.
+		err := t.Execute(&b, map[string]string{
+			"Version": Version,
+			"Date":    Date,
+			"Commit":  Commit,
+		})
+		if err != nil {
+			return err
+		}
+		fmt.Println(b.String())
+
 		os.Exit(0)
 	}
+	return nil
+}
+
+// Print is a shortcut to printing with the default template.
+func Print() {
+	p := NewPrinter()
+	p.Print()
 }

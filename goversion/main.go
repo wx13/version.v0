@@ -14,8 +14,8 @@ import (
 )
 
 // GetVersion searches for a file named ".version" or "VERSION" in
-// the current directory or any parent directory.  If found, it
-// returns the first line of this file.  If not, it returns an
+// the current directory or any parent directory. If found, it
+// returns the first line of this file. If not, it returns an
 // empty string.
 func GetVersion() (string, error) {
 
@@ -71,7 +71,7 @@ func GetTime() (string, error) {
 
 func main() {
 
-	version.Run()
+	version.Print()
 
 	// Construct the ldflags string.
 	v, _ := GetVersion()
@@ -93,6 +93,6 @@ func main() {
 	// Run the command.
 	cmd := exec.Command("go", args...)
 	out, _ := cmd.CombinedOutput()
-	fmt.Println(string(out))
+	fmt.Printf(string(out))
 
 }
