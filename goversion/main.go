@@ -45,7 +45,7 @@ func GetVersion() (string, error) {
 }
 
 // GetCommit returns git commit and status info.
-func GetCommit() (string, error) {
+func GetCommit() (string, string, error) {
 
 	// Get the current commit hash.
 	cmd := exec.Command("git", "rev-parse", "HEAD")
@@ -56,12 +56,54 @@ func GetCommit() (string, error) {
 	cmd = exec.Command("git", "status", "-s", "-uno")
 	out, _ = cmd.Output()
 	lines := strings.Split(string(out), "\n")
+	status := ""
 	if len(lines[0]) > 0 {
-		commit += "*"
+		status = "*"
 	}
 
-	return commit, nil
+	return commit, status, nil
 
+}
+
+// GetTag gets the most recent version tag in the history.
+func GetTag() (string, int, error) {
+	// Find all the version tags.
+	cmd := exec.Command("git", "tag", "-l", "v[0-9]*")
+	out, err := cmd.Output()
+	if err != nil {
+		return "", 0, err
+	}
+	tags := strings.Split(string(out), "\n")
+
+	// Find the ancestor tags
+	ancestors := []string{}
+	for _, tag := range tags {
+		cmd := exec.Command("git", "merge-base", "--is-ancestor", tag, "HEAD")
+		_, err := cmd.Output()
+		if err == nil {
+			ancestors = append(ancestors, tag)
+		}
+	}
+
+	// Find the most recent ancestor
+	numCommits := -1
+	bestTag := ""
+	for _, tag := range ancestors {
+		cmd := exec.Command("git", "log", "--oneline", tag+"..HEAD")
+		out, err := cmd.Output()
+		if err != nil {
+			continue
+		}
+		n := len(strings.Split(string(out), "\n")) - 1
+		if numCommits < 0 || n < numCommits {
+			numCommits = n
+			bestTag = tag
+		}
+	}
+	if numCommits < 0 || bestTag == "" {
+		return "", 0, fmt.Errorf("No version tags")
+	}
+	return bestTag, numCommits, nil
 }
 
 // GetTIme returns a string representation of the current time.
@@ -74,12 +116,25 @@ func main() {
 	version.Print()
 
 	// Construct the ldflags string.
-	v, _ := GetVersion()
-	ldflags := fmt.Sprintf(`-X github.com/wx13/version.Version=%s`, v)
 	t, _ := GetTime()
-	ldflags += fmt.Sprintf(` -X github.com/wx13/version.Date=%s`, t)
-	c, _ := GetCommit()
-	ldflags += fmt.Sprintf(` -X github.com/wx13/version.Commit=%s`, c)
+	ldflags := fmt.Sprintf(` -X github.com/wx13/version.Date=%s`, t)
+	hash, status, _ := GetCommit()
+	ldflags += fmt.Sprintf(` -X github.com/wx13/version.Commit=%s`, hash+status)
+
+	// Get version.
+	version, dist, err := GetTag()
+	if err != nil || version == "" {
+		version, _ = GetVersion()
+		dist = 0
+	}
+	if dist > 0 {
+		if len(hash) > 6 {
+			version += "-" + hash[:6] + status
+		}
+	}
+	fmt.Println(version)
+
+	ldflags += fmt.Sprintf(`-X github.com/wx13/version.Version=%s`, version)
 
 	// Reconstruct the command line.
 	args := []string{}
@@ -88,7 +143,9 @@ func main() {
 	}
 	args = append(args, "-ldflags")
 	args = append(args, ldflags)
-	args = append(args, os.Args[2:]...)
+	if len(os.Args) > 2 {
+		args = append(args, os.Args[2:]...)
+	}
 
 	// Run the command.
 	cmd := exec.Command("go", args...)
