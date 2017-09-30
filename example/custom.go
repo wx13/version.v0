@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/wx13/version"
+	"github.com/wx13/version.v0"
 )
 
 func main() {

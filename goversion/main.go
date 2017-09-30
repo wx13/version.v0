@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wx13/version"
+	"github.com/wx13/version.v0"
 )
 
 // GetFileVersion searches for a file named ".version" or "VERSION" in
@@ -159,10 +159,10 @@ func main() {
 	fullVersion += gitStatus
 
 	// Construct the ldflags string.
-	ldflags := fmt.Sprintf(` -X github.com/wx13/version.Date=%s`, buildTime)
-	ldflags += fmt.Sprintf(` -X github.com/wx13/version.Commit=%s`, gitHash+gitStatus)
-	ldflags += fmt.Sprintf(` -X github.com/wx13/version.Version=%s`, version)
-	ldflags += fmt.Sprintf(` -X github.com/wx13/version.FullVersion=%s`, fullVersion)
+	ldflags := fmt.Sprintf(` -X github.com/wx13/version.v0.Date=%s`, buildTime)
+	ldflags += fmt.Sprintf(` -X github.com/wx13/version.v0.Commit=%s`, gitHash+gitStatus)
+	ldflags += fmt.Sprintf(` -X github.com/wx13/version.v0.Version=%s`, version)
+	ldflags += fmt.Sprintf(` -X github.com/wx13/version.v0.FullVersion=%s`, fullVersion)
 
 	// Reconstruct the command line.
 	args := []string{}
