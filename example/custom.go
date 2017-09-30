@@ -8,8 +8,9 @@ import (
 func main() {
 	// Use a custom print template.
 	p := version.NewPrinter()
-	p.Template = "This is version {{.Version}}, " +
+	p.FullTemplate = "This is version {{.Version}}, " +
 		"built at {{.Date}}, from commit {{.Commit}}."
+	p.Template = "version: {{.Version}}"
 	p.Print()
 
 	// Use version information elsewhere in the app

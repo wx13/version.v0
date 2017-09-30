@@ -18,18 +18,20 @@ var (
 
 // Printer allows the user to set a custom print template.
 type Printer struct {
-	Template string
-	Flags    []string
+	FullTemplate string
+	Template     string
+	Flags        []string
 }
 
 // NewPrinter sets the default print template.
 func NewPrinter() *Printer {
 	p := Printer{}
 	p.Flags = []string{"version", "-version", "--version"}
-	p.Template = ""
-	p.Template += "Version:    {{.Version}}\n"
-	p.Template += "Build Date: {{.Date}}\n"
-	p.Template += "Commit:     {{.Commit}}\n"
+	p.Template = "{{.Version}}"
+	p.FullTemplate = ""
+	p.FullTemplate += "Version:    {{.Version}}\n"
+	p.FullTemplate += "Build Date: {{.Date}}\n"
+	p.FullTemplate += "Commit:     {{.Commit}}\n"
 	return &p
 }
 
@@ -45,15 +47,21 @@ func (p *Printer) FlagIsSet(arg string) bool {
 
 // Print prints version info, conditioned on the user input.
 func (p *Printer) Print() error {
-	// Don't do anything if no arguments are passed.
 	if len(os.Args) < 2 {
 		return nil
 	}
 	// Check if user is asking for version information.
 	if p.FlagIsSet(os.Args[1]) {
 
+		var tmplt string
+		if Version == FullVersion {
+			tmplt = p.Template
+		} else {
+			tmplt = p.FullTemplate
+		}
+
 		// Compile the print template.
-		t := template.Must(template.New("VersionPrinter").Parse(p.Template))
+		t := template.Must(template.New("VersionPrinter").Parse(tmplt))
 		var b bytes.Buffer
 
 		// Execute the template and output the result.
