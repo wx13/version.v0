@@ -10,24 +10,37 @@ import (
 
 // Use package variables because they can be set linker flags.
 var (
-	Version string
-	Date    string
-	Commit  string
+	Version     string
+	FullVersion string
+	Date        string
+	Commit      string
 )
 
 // Printer allows the user to set a custom print template.
 type Printer struct {
 	Template string
+	Flags    []string
 }
 
 // NewPrinter sets the default print template.
 func NewPrinter() *Printer {
 	p := Printer{}
+	p.Flags = []string{"version", "-version", "--version"}
 	p.Template = ""
 	p.Template += "Version:    {{.Version}}\n"
 	p.Template += "Build Date: {{.Date}}\n"
 	p.Template += "Commit:     {{.Commit}}\n"
 	return &p
+}
+
+// FlagIsSet returns true if a version flag is set.
+func (p *Printer) FlagIsSet(arg string) bool {
+	for _, flag := range p.Flags {
+		if arg == flag {
+			return true
+		}
+	}
+	return false
 }
 
 // Print prints version info, conditioned on the user input.
@@ -37,8 +50,7 @@ func (p *Printer) Print() error {
 		return nil
 	}
 	// Check if user is asking for version information.
-	switch os.Args[1] {
-	case "version", "-version", "--version":
+	if p.FlagIsSet(os.Args[1]) {
 
 		// Compile the print template.
 		t := template.Must(template.New("VersionPrinter").Parse(p.Template))

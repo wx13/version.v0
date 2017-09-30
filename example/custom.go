@@ -14,4 +14,5 @@ func main() {
 
 	// Use version information elsewhere in the app
 	fmt.Printf("[%s] Do something...\n", version.Version)
+	fmt.Printf("[%s] Do something else...\n", version.FullVersion)
 }

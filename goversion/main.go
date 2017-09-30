@@ -13,19 +13,21 @@ import (
 	"github.com/wx13/version"
 )
 
-// GetVersion searches for a file named ".version" or "VERSION" in
+// GetFileVersion searches for a file named ".version" or "VERSION" in
 // the current directory or any parent directory. If found, it
 // returns the first line of this file. If not, it returns an
-// empty string.
-func GetVersion() (string, error) {
+// empty string. The only input parameter is the max search depth.
+// If match search depth is 0, it only looks in the current directory.
+func GetFileVersion(depth int) (string, error) {
 
+	// Get the current working directory.
 	dir, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
 
 	// Start with the current dir, and step up through the parents.
-	for {
+	for i := 0; i <= depth; i++ {
 		for _, name := range []string{".version", "VERSION"} {
 			data, err := ioutil.ReadFile(path.Join(dir, name))
 			if err == nil {
@@ -66,7 +68,7 @@ func GetCommit() (string, string, error) {
 }
 
 // GetTag gets the most recent version tag in the history.
-func GetTag() (string, int, error) {
+func GetTagVersion() (string, int, error) {
 	// Find all the version tags.
 	cmd := exec.Command("git", "tag", "-l", "v[0-9]*")
 	out, err := cmd.Output()
@@ -106,6 +108,39 @@ func GetTag() (string, int, error) {
 	return bestTag, numCommits, nil
 }
 
+// GetVersion returns two version strings (regular and full).
+func GetVersion(hash string) (string, string) {
+
+	var version string
+	var fullVersion string
+
+	// Get the version from git tags.
+	tag_version, distance, err := GetTagVersion()
+
+	// If we got a version from git, then only look for a version file
+	// in the current directory (let's the user override git). If we didn't
+	// get a version number from git, then look deeper.
+	depth := 0
+	if err != nil || tag_version == "" {
+		depth = 100
+	}
+
+	// Look for a version file.
+	file_version, err := GetFileVersion(depth)
+	if err == nil {
+		version = file_version
+		fullVersion = version
+	} else {
+		version = tag_version
+		// If we are not on the current tag, append a commit hash.
+		if distance > 0 && len(hash) > 8 {
+			fullVersion = version + "-" + hash[:8]
+		}
+	}
+
+	return version, fullVersion
+}
+
 // GetTIme returns a string representation of the current time.
 func GetTime() (string, error) {
 	return time.Now().Format(time.RFC3339), nil
@@ -113,28 +148,20 @@ func GetTime() (string, error) {
 
 func main() {
 
+	// It's self-referential, man.
 	version.Print()
 
+	// Get the version information.
+	buildTime, _ := GetTime()
+	gitHash, gitStatus, _ := GetCommit()
+	version, fullVersion := GetVersion(gitHash)
+	fullVersion += gitStatus
+
 	// Construct the ldflags string.
-	t, _ := GetTime()
-	ldflags := fmt.Sprintf(` -X github.com/wx13/version.Date=%s`, t)
-	hash, status, _ := GetCommit()
-	ldflags += fmt.Sprintf(` -X github.com/wx13/version.Commit=%s`, hash+status)
-
-	// Get version.
-	version, dist, err := GetTag()
-	if err != nil || version == "" {
-		version, _ = GetVersion()
-		dist = 0
-	}
-	if dist > 0 {
-		if len(hash) > 6 {
-			version += "-" + hash[:6] + status
-		}
-	}
-	fmt.Println(version)
-
-	ldflags += fmt.Sprintf(`-X github.com/wx13/version.Version=%s`, version)
+	ldflags := fmt.Sprintf(` -X github.com/wx13/version.Date=%s`, buildTime)
+	ldflags += fmt.Sprintf(` -X github.com/wx13/version.Commit=%s`, gitHash+gitStatus)
+	ldflags += fmt.Sprintf(` -X github.com/wx13/version.Version=%s`, version)
+	ldflags += fmt.Sprintf(` -X github.com/wx13/version.FullVersion=%s`, fullVersion)
 
 	// Reconstruct the command line.
 	args := []string{}
