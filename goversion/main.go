@@ -115,23 +115,24 @@ func GetVersion(hash string) (string, string) {
 	var fullVersion string
 
 	// Get the version from git tags.
-	tag_version, distance, err := GetTagVersion()
+	tagVersion, distance, err := GetTagVersion()
 
 	// If we got a version from git, then only look for a version file
 	// in the current directory (let's the user override git). If we didn't
 	// get a version number from git, then look deeper.
 	depth := 0
-	if err != nil || tag_version == "" {
+	if err != nil || tagVersion == "" {
 		depth = 100
 	}
 
 	// Look for a version file.
-	file_version, err := GetFileVersion(depth)
+	fileVersion, err := GetFileVersion(depth)
 	if err == nil {
-		version = file_version
+		version = fileVersion
 		fullVersion = version
 	} else {
-		version = tag_version
+		version = tagVersion
+		fullVersion = version
 		// If we are not on the current tag, append a commit hash.
 		if distance > 0 && len(hash) > 8 {
 			fullVersion = version + "-" + hash[:8]
